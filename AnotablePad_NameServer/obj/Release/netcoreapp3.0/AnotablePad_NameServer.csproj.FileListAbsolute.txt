@@ -1,0 +1,11 @@
+C:\Users\Lunox\Source\repos\AnotablePad_NameServer\AnotablePad_NameServer\bin\Release\netcoreapp3.0\AnotablePad_NameServer.exe
+C:\Users\Lunox\Source\repos\AnotablePad_NameServer\AnotablePad_NameServer\bin\Release\netcoreapp3.0\AnotablePad_NameServer.deps.json
+C:\Users\Lunox\Source\repos\AnotablePad_NameServer\AnotablePad_NameServer\bin\Release\netcoreapp3.0\AnotablePad_NameServer.runtimeconfig.json
+C:\Users\Lunox\Source\repos\AnotablePad_NameServer\AnotablePad_NameServer\bin\Release\netcoreapp3.0\AnotablePad_NameServer.runtimeconfig.dev.json
+C:\Users\Lunox\Source\repos\AnotablePad_NameServer\AnotablePad_NameServer\bin\Release\netcoreapp3.0\AnotablePad_NameServer.dll
+C:\Users\Lunox\Source\repos\AnotablePad_NameServer\AnotablePad_NameServer\bin\Release\netcoreapp3.0\AnotablePad_NameServer.pdb
+C:\Users\Lunox\Source\repos\AnotablePad_NameServer\AnotablePad_NameServer\obj\Release\netcoreapp3.0\AnotablePad_NameServer.AssemblyInfoInputs.cache
+C:\Users\Lunox\Source\repos\AnotablePad_NameServer\AnotablePad_NameServer\obj\Release\netcoreapp3.0\AnotablePad_NameServer.AssemblyInfo.cs
+C:\Users\Lunox\Source\repos\AnotablePad_NameServer\AnotablePad_NameServer\obj\Release\netcoreapp3.0\AnotablePad_NameServer.dll
+C:\Users\Lunox\Source\repos\AnotablePad_NameServer\AnotablePad_NameServer\obj\Release\netcoreapp3.0\AnotablePad_NameServer.pdb
+C:\Users\Lunox\Source\repos\AnotablePad_NameServer\AnotablePad_NameServer\obj\Release\netcoreapp3.0\AnotablePad_NameServer.csprojAssemblyReference.cache
