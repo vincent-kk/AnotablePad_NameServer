@@ -310,3 +310,16 @@ public class TransportTCP {
     }
 
 }
+
+public class TcpListenerManager
+{
+    private bool isListening;
+    private TcpListener tcpListener;
+    public bool IsListening { get => isListening; set => isListening = value; }
+    public TcpListener TcpListener { get => tcpListener; set => tcpListener = value; }
+    public TcpListenerManager(string port)
+    {
+        TcpListener = new TcpListener(IPAddress.Any, Int32.Parse(port));
+        IsListening = true;
+    }
+}

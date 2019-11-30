@@ -1,113 +1,4 @@
 ﻿
-/*
-public class ProcessHandeler
-{
-    string lobbyServerProcessPath = "C:\\Users\\Lunox\\Source\\repos\\ProcessTester\\ProcessTester\\bin\\Release\\netcoreapp3.0\\ProcessTester.exe";
-    string pipeName;
-    int roomSerberId;
-
-    public ProcessHandeler()
-    {
-
-    }
-
-    public void runProcess()
-    {
-
-        pipeName = Utilities.GetRandomPassword(8);
-        Console.WriteLine("Room Server Process Executing...");
-        Process roomServer = new Process();
-        roomServer.StartInfo.UseShellExecute = false;
-        roomServer.StartInfo.FileName = lobbyServerProcessPath;
-        roomServer.StartInfo.Arguments = pipeName;
-        roomServer.StartInfo.CreateNoWindow = false;
-        roomServer.Start();
-
-        roomSerberId = roomServer.Id;
-
-        NamedPipeServerStream pipe = new NamedPipeServerStream(pipeName, PipeDirection.InOut);
-
-        // Wait for a client to connect
-        Console.Write("Waiting for Room Server connection...");
-        pipe.WaitForConnection();
-        Console.WriteLine("Room Server connected.");
-
-        try
-        {
-            StreamWriter sw = new StreamWriter(pipe);
-            sw.AutoFlush = true;
-
-            Thread.Sleep(100);
-            Console.Write("Enter text: ");
-            sw.WriteLine();
-
-
-
-            StreamReader sr = new StreamReader(pipe);
-            Console.WriteLine("Return : {0}", sr.ReadLine());
-        }
-        // Catch the IOException that is raised if the pipe is broken
-        // or disconnected.
-        catch (IOException e)
-        {
-            Console.WriteLine("ERROR: {0}", e.Message);
-        }
-    }
-}
-
-class NameServer
-{
-
-    public static void OnEventHandling(NetEventState state)
-    {
-
-    }
-
-
-
-    public static void Main(string[] args)
-    {
-
-        //string ProcessPath = "Tester\\ProcessTester.exe";
-
-
-
-        TcpListener tcpListener = null;
-        byte[] buffer = new byte[128];
-
-        Socket host = null;
-        Socket tablet = null;
-        try
-        {
-
-            tcpListener = new TcpListener(IPAddress.Any, 4444);
-
-            tcpListener.Start();
-
-            Console.WriteLine("MuliThread Starting : Waiting for connections...");
-
-
-            ProcessHandeler ph = new ProcessHandeler();
-
-            Thread clientThread = new Thread(new ThreadStart(ph.runProcess));
-
-            clientThread.Start();
-
-
-        }
-        catch (Exception exp)
-        {
-            Console.WriteLine("Exception :" + exp);
-        }
-        finally
-        {
-            tcpListener.Stop();
-        }
-    }
-
-}
-*/
-
 using System;
 using System.IO;
 using System.IO.Pipes;
@@ -116,97 +7,30 @@ using System.Threading;
 using System.Net.Sockets;
 using System.Net;
 using System.Diagnostics;
-
-public class ProcessHandeler
-{
-    string lobbyServerProcessPath = "C:\\Users\\Lunox\\Source\\repos\\ProcessTester\\ProcessTester\\bin\\Release\\netcoreapp3.0\\ProcessTester.exe";
-    string pipeName;
-    string roomServerPort;
-
-    Socket host;
-    Socket tablet;
-
-    public ProcessHandeler()
-    {
-        Console.WriteLine("Room Handling Thread is Running");
-    }
-
-    public ProcessHandeler(Socket host)
-    {
-        this.host = host;
-    }
-
-    public ProcessHandeler(Socket host, Socket tablet)
-    {
-        this.host = host;
-        this.tablet = tablet;
-    }
-    public void runProcess()
-    {
-
-        byte[] buffer = new byte[128];
-
-        pipeName = Utilities.GetRandomPassword(8);
-        Console.WriteLine("Room Server Process Executing...");
-        Process roomServer = new Process();
-        roomServer.StartInfo.UseShellExecute = false;
-        roomServer.StartInfo.FileName = lobbyServerProcessPath;
-        roomServer.StartInfo.Arguments = pipeName;
-        roomServer.StartInfo.CreateNoWindow = false;
-        roomServer.Start();
-
-        NamedPipeServerStream pipeServer = new NamedPipeServerStream(pipeName, PipeDirection.InOut);
-
-        int threadId = Thread.CurrentThread.ManagedThreadId;
-
-        // Wait for a client to connect
-        Console.Write("Waiting for Room Server connection...");
-        pipeServer.WaitForConnection();
-        Console.WriteLine("Room Server {0} connected.", threadId);
-        try
-        {
-            StreamString ss = new StreamString(pipeServer);
-
-            ss.WriteString("I am the one true server!"); //<<1
-
-            //룸서버에 포트 전송
-            roomServerPort = "5000";//Utilities.FindFreePort().ToString();
-            ss.WriteString(roomServerPort); //<<3
-            Thread.Sleep(100);
-
-            //클라이언트에게 룸서버 포트 전송.
-            buffer = Encoding.UTF8.GetBytes(roomServerPort);
-
-            host.Send(buffer, buffer.Length, SocketFlags.None);
-            tablet.Send(buffer, buffer.Length, SocketFlags.None);
-
-            Thread.Sleep(100);
-            var temp = ss.ReadString();
-
-            Console.WriteLine(temp);
-        }
-        catch (IOException e)
-        {
-            Console.WriteLine("ERROR: {0}", e.Message);
-        }
-
-        roomServer.WaitForExit();
-        pipeServer.Close();
-    }
-}
-
+using System.Collections.Generic;
 
 public class LobbyServer
 {
+    public static void OnEventHandling(NetEventState state)
+    {
+
+    }
 
     public static void Main()
     {
+        List<RoomServerElement> rooms = new List<RoomServerElement>();
+        List<ClientElement> clients = new List<ClientElement>();
 
         TcpListener tcpListener = null;
         byte[] buffer = new byte[128];
 
         Socket host = null;
         Socket tablet = null;
+
+        ThreadObserver observer = new ThreadObserver(rooms, clients);
+        Thread observerThread = new Thread(new ThreadStart(observer.runObserving));
+        observerThread.Start();
+
         try
         {
             tcpListener = new TcpListener(IPAddress.Any, 4444);
@@ -219,8 +43,14 @@ public class LobbyServer
             {
                 Socket temp = tcpListener.AcceptSocket();
 
+                
+                ClientHandler clientHandler = new ClientHandler(temp);
+                Thread clientThread = new Thread(new ThreadStart(clientHandler.clientHandler));
+                clients.Add(new ClientElement(clientHandler, clientThread));
+                clientThread.Start();
+                
+                /*
                 int recvSize = temp.Receive(buffer, buffer.Length, SocketFlags.None);
-
                 if (recvSize > 0)
                 {
                     string message = Encoding.UTF8.GetString(buffer, 0, recvSize);
@@ -245,7 +75,7 @@ public class LobbyServer
                 }
                 else
                 {
-                    buffer = System.Text.Encoding.UTF8.GetBytes("@FAIL");
+                    buffer = Encoding.UTF8.GetBytes("@FAIL");
                     temp.Send(buffer, buffer.Length, SocketFlags.None);
                     continue;
                 }
@@ -253,10 +83,13 @@ public class LobbyServer
                 if (host == null || tablet == null)
                     continue;
 
-                ProcessHandeler rHandler = new ProcessHandeler(host, tablet);
-                Thread roomHandler = new Thread(new ThreadStart(rHandler.runProcess));
+                ProcessHandeler roomProcess = new ProcessHandeler(host, tablet);
+                Thread roomHandler = new Thread(new ThreadStart(roomProcess.runProcess));
+                rooms.Add(new RoomServerElement(roomProcess, roomHandler));
                 roomHandler.Start();
                 host = tablet = null;
+                */
+                
             }
         }
         catch (Exception exp)
@@ -266,38 +99,10 @@ public class LobbyServer
         finally
         {
             tcpListener.Stop();
+            observerThread.Join();
         }
-        /*
-        int i;
-        Thread[] servers = new Thread[numThreads];
 
-        Console.WriteLine("\n*** Named pipe server stream with impersonation example ***\n");
-        Console.WriteLine("Waiting for client connect...\n");
-
-        for (i = 0; i < numThreads; i++)
-        {
-            servers[i] = new Thread(ServerThread);
-            servers[i].Start();
-        }
-        Thread.Sleep(250);
-
-        while (i > 0)
-        {
-            for (int j = 0; j < numThreads; j++)
-            {
-                if (servers[j] != null)
-                {
-                    if (servers[j].Join(250))
-                    {
-                        Console.WriteLine("Server thread[{0}] finished.", servers[j].ManagedThreadId);
-                        servers[j] = null;
-                        i--;    // decrement the thread watch count
-                    }
-                }
-            }
-        }
-        */
-        Console.WriteLine("\nServer threads exhausted, exiting.");
+        Console.WriteLine("AnotablePad NameServer is Closed...");
     }
 
     private static void ServerThread(object data)
@@ -327,8 +132,7 @@ public class LobbyServer
             ReadFileToStream fileReader = new ReadFileToStream(ss, filename);
 
             // Display the name of the user we are impersonating.
-            Console.WriteLine("Reading file: {0} on thread[{1}] as user: {2}.",
-                filename, threadId, pipeServer.GetImpersonationUserName());
+            Console.WriteLine("Reading file: {0} on thread[{1}] as user: {2}.", filename, threadId, pipeServer.GetImpersonationUserName());
             pipeServer.RunAsClient(fileReader.Start);
         }
         // Catch the IOException that is raised if the pipe is broken
@@ -341,80 +145,95 @@ public class LobbyServer
     }
 }
 
-// Defines the data protocol for reading and writing strings on our stream
-public class StreamString
+
+public class ClientHandler
 {
-    private Stream ioStream;
-    private UTF8Encoding streamEncoding;
-
-    public StreamString(Stream ioStream)
+    Socket sock;
+    bool isTablet;
+    byte[] buffer;
+    public ClientHandler(Socket sock)
     {
-        this.ioStream = ioStream;
-        streamEncoding = new UTF8Encoding();
+        this.Sock = sock;
+        this.buffer = new byte[1024];
     }
+    public Socket Sock { get => sock; set => sock = value; }
+    public bool IsTablet { get => isTablet; set => isTablet = value; }
 
-    public string ReadString()
+    public void clientHandler()
     {
-        int len = 0;
-
-        len = ioStream.ReadByte() * 256;
-        len += ioStream.ReadByte();
-        byte[] inBuffer = new byte[len];
-        ioStream.Read(inBuffer, 0, len);
-
-        return streamEncoding.GetString(inBuffer);
-    }
-
-    public int WriteString(string outString)
-    {
-        byte[] outBuffer = streamEncoding.GetBytes(outString);
-        int len = outBuffer.Length;
-        if (len > UInt16.MaxValue)
+        try
         {
-            len = (int)UInt16.MaxValue;
+            int recvSize = Sock.Receive(buffer, buffer.Length, SocketFlags.None);
+            if (recvSize > 0)
+            {
+                string message = Encoding.UTF8.GetString(buffer, 0, recvSize);
+                if (message == "@Tablet") IsTablet = true;
+                else IsTablet = false;
+            }
+
+            buffer = Encoding.UTF8.GetBytes("@CONNECTION");
+            Sock.Send(buffer, buffer.Length, SocketFlags.None);
+            while (true)
+            {
+                recvSize = Sock.Receive(buffer, buffer.Length, SocketFlags.None);
+                if (recvSize > 0)
+                {
+                    string message = Encoding.UTF8.GetString(buffer, 0, recvSize);
+                    string returnMessage = IsTablet ? TabletRequest(message) : ComputerRequest(message);
+                    buffer = Encoding.UTF8.GetBytes(returnMessage);
+                    Sock.Send(buffer, buffer.Length, SocketFlags.None);
+                }
+                else
+                {
+                    buffer = Encoding.UTF8.GetBytes("@ERROR");
+                    Sock.Send(buffer, buffer.Length, SocketFlags.None);
+                    break;
+                }
+            }
         }
-        ioStream.WriteByte((byte)(len / 256));
-        ioStream.WriteByte((byte)(len & 255));
-        ioStream.Write(outBuffer, 0, len);
-        ioStream.Flush();
-
-        return outBuffer.Length + 2;
+        catch (IOException e)
+        {
+            Console.WriteLine("ERROR: {0}", e.Message);
+        }
     }
-
-    public int WriteByte(byte[] outString)
+    private string TabletRequest(string request)
     {
-        byte[] outBuffer = outString;
-        int len = outBuffer.Length;
-        ioStream.Write(outBuffer, 0, len);
-        ioStream.Flush();
-        return len;
+        string msg;
+        switch (request)
+        {
+            case "@FIND-ROOM|":
+                msg = "@ROOM-LIST%AAA%BBB%CCC";
+                break;
+            case "@CREATE-ROOM|":
+                msg = "@ROOMNAME";
+                break;
+            case "@ENTER-ROOM|":
+                msg = "@ROOMNUMBER";
+                break;
+            default:
+                msg = "@INVALIED";
+                break;
+        }
+        return msg;
     }
-
-    public byte[] ReadByte()
+    private string ComputerRequest(string request)
     {
-        int len = 0;
-        len = ioStream.ReadByte();
-        byte[] inBuffer = new byte[len];
-        ioStream.Read(inBuffer, 0, len);
-        return inBuffer;
-    }
-}
-
-// Contains the method executed in the context of the impersonated user
-public class ReadFileToStream
-{
-    private string fn;
-    private StreamString ss;
-
-    public ReadFileToStream(StreamString str, string filename)
-    {
-        fn = filename;
-        ss = str;
-    }
-
-    public void Start()
-    {
-        string contents = File.ReadAllText(fn);
-        ss.WriteString(contents);
+        string msg;
+        switch (request)
+        {
+            case "@FIND-ROOM|":
+                msg = "@ROOM-LIST%AAA%BBB%CCC";
+                break;
+            case "@CREATE-ROOM|":
+                msg = "@ROOMNAME";
+                break;
+            case "@ENTER-ROOM|":
+                msg = "@ROOMNUMBER";
+                break;
+            default:
+                msg = "@INVALIED";
+                break;
+        }
+        return msg;
     }
 }
