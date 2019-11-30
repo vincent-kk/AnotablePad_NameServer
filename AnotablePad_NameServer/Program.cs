@@ -167,7 +167,7 @@ public class ClientHandler
             if (recvSize > 0)
             {
                 string message = Encoding.UTF8.GetString(buffer, 0, recvSize);
-                if (message == "@Tablet") IsTablet = true;
+                if (message == "@Tablet|") IsTablet = true;
                 else IsTablet = false;
             }
 
@@ -222,7 +222,7 @@ public class ClientHandler
         switch (request)
         {
             case "@FIND-ROOM|":
-                msg = "@ROOM-LIST%AAA%BBB%CCC";
+                msg = "@ROOM-LIST%AWEAD%GWEGSDf%QASDWEG%AWAWDA%QWEASD";
                 break;
             case "@CREATE-ROOM|":
                 msg = "@ROOMNAME";
