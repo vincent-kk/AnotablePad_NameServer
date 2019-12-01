@@ -1,53 +1,53 @@
 ﻿
 using System;
-using System.Collections;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
-public class TransportTCP {
+public class TransportTCP
+{
 
-	//
-	// 소켓 접속 관련.
-	//
+    //
+    // 소켓 접속 관련.
+    //
 
-	// 리스닝 소켓.
-	private Socket			m_listener = null;
+    // 리스닝 소켓.
+    private Socket m_listener = null;
 
-	// 클라이언트와의 접속용 소켓.
-	private Socket			m_socket = null;
+    // 클라이언트와의 접속용 소켓.
+    private Socket m_socket = null;
 
-	// 송신 버퍼.
-	private PacketQueue		m_sendQueue;
-	
-	// 수신 버퍼.
-	private PacketQueue		m_recvQueue;
-	
-	// 서버 플래그.	
-	private bool	 		m_isServer = false;
+    // 송신 버퍼.
+    private PacketQueue m_sendQueue;
 
-	// 접속 플래그.
-	private	bool			m_isConnected = false;
+    // 수신 버퍼.
+    private PacketQueue m_recvQueue;
 
-	//
-	// 이벤트 관련 멤버 변수.
-	//
+    // 서버 플래그.	
+    private bool m_isServer = false;
 
-	// 이벤트 통지의 델리게이트.
-	public delegate void 	EventHandler(NetEventState state);
+    // 접속 플래그.
+    private bool m_isConnected = false;
 
-	private EventHandler	m_handler;
+    //
+    // 이벤트 관련 멤버 변수.
+    //
 
-	//
-	// 스레드 관련 멤버 변수.
-	//
+    // 이벤트 통지의 델리게이트.
+    public delegate void EventHandler(NetEventState state);
 
-	// 스레드 실행 플래그.
-	protected bool			m_threadLoop = false;
-	
-	protected Thread		m_thread = null;
+    private EventHandler m_handler;
 
-	private static int 		s_mtu = 1400;
+    //
+    // 스레드 관련 멤버 변수.
+    //
+
+    // 스레드 실행 플래그.
+    protected bool m_threadLoop = false;
+
+    protected Thread m_thread = null;
+
+    private static int s_mtu = 1400;
 
 
     // Use this for initialization
@@ -57,23 +57,25 @@ public class TransportTCP {
         m_sendQueue = new PacketQueue();
         m_recvQueue = new PacketQueue();
     }
-        // 송수신 버퍼를 작성합니다. 
+    // 송수신 버퍼를 작성합니다. 
 
-	// 대기 시작.
-	public bool StartServer(int port, int connectionNum)
-	{
+    // 대기 시작.
+    public bool StartServer(int port, int connectionNum)
+    {
         Console.WriteLine("StartServer called.!");
 
         // 리스닝 소켓을 생성합니다.
-        try {
-			// 소켓을 생성합니다.
-			m_listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-			// 사용할 포트 번호를 할당합니다.
-			m_listener.Bind(new IPEndPoint(IPAddress.Any, port));
-			// 대기를 시작합니다.
-			m_listener.Listen(connectionNum);
+        try
+        {
+            // 소켓을 생성합니다.
+            m_listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            // 사용할 포트 번호를 할당합니다.
+            m_listener.Bind(new IPEndPoint(IPAddress.Any, port));
+            // 대기를 시작합니다.
+            m_listener.Listen(connectionNum);
         }
-        catch {
+        catch
+        {
             Console.WriteLine("StartServer fail");
             return false;
         }
@@ -83,18 +85,20 @@ public class TransportTCP {
         return LaunchThread();
     }
 
-	// 대기 종료.
+    // 대기 종료.
     public void StopServer()
     {
-		m_threadLoop = false;
-        if (m_thread != null) {
+        m_threadLoop = false;
+        if (m_thread != null)
+        {
             m_thread.Join();
             m_thread = null;
         }
 
         Disconnect();
 
-        if (m_listener != null) {
+        if (m_listener != null)
+        {
             m_listener.Close();
             m_listener = null;
         }
@@ -110,35 +114,41 @@ public class TransportTCP {
     {
         Console.WriteLine("TransportTCP connect called.");
 
-        if (m_listener != null) {
+        if (m_listener != null)
+        {
             return false;
         }
 
-		bool ret = false;
-        try {
+        bool ret = false;
+        try
+        {
             m_socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             m_socket.NoDelay = true;
             m_socket.Connect(address, port);
-			ret = LaunchThread();
-		}
-        catch {
+            ret = LaunchThread();
+        }
+        catch
+        {
             m_socket = null;
         }
 
-		if (ret == true) {
-			m_isConnected = true;
+        if (ret == true)
+        {
+            m_isConnected = true;
             Console.WriteLine("Connection success.");
-		}
-		else {
-			m_isConnected = false;
+        }
+        else
+        {
+            m_isConnected = false;
             Console.WriteLine("Connect fail");
-		}
+        }
 
-        if (m_handler != null) {
+        if (m_handler != null)
+        {
             // 접속 결과를 통지합니다. 
-			NetEventState state = new NetEventState();
-			state.type = NetEventType.Connect;
-			state.result = (m_isConnected == true) ? NetEventResult.Success : NetEventResult.Failure;
+            NetEventState state = new NetEventState();
+            state.type = NetEventType.Connect;
+            state.result = (m_isConnected == true) ? NetEventResult.Success : NetEventResult.Failure;
             m_handler(state);
             Console.WriteLine("event handler called");
         }
@@ -146,11 +156,13 @@ public class TransportTCP {
         return m_isConnected;
     }
 
-	// 끊기. 
-    public void Disconnect() {
+    // 끊기. 
+    public void Disconnect()
+    {
         m_isConnected = false;
 
-        if (m_socket != null) {
+        if (m_socket != null)
+        {
             // 소켓 클로즈.
             m_socket.Shutdown(SocketShutdown.Both);
             m_socket.Close();
@@ -158,154 +170,173 @@ public class TransportTCP {
         }
 
         // 끊김을 통지합니다.
-        if (m_handler != null) {
-			NetEventState state = new NetEventState();
-			state.type = NetEventType.Disconnect;
-			state.result = NetEventResult.Success;
-			m_handler(state);
+        if (m_handler != null)
+        {
+            NetEventState state = new NetEventState();
+            state.type = NetEventType.Disconnect;
+            state.result = NetEventResult.Success;
+            m_handler(state);
         }
     }
 
     // 송신처리.
     public int Send(byte[] data, int size)
-	{
-		if (m_sendQueue == null) {
-			return 0;
-		}
+    {
+        if (m_sendQueue == null)
+        {
+            return 0;
+        }
 
         return m_sendQueue.Enqueue(data, size);
     }
 
     // 수신처리.
     public int Receive(ref byte[] buffer, int size)
-	{
-		if (m_recvQueue == null) {
-			return 0;
-		}
+    {
+        if (m_recvQueue == null)
+        {
+            return 0;
+        }
 
         return m_recvQueue.Dequeue(ref buffer, size);
     }
 
-	// 이벤트 통지 함수 등록.
+    // 이벤트 통지 함수 등록.
     public void RegisterEventHandler(EventHandler handler)
     {
         m_handler += handler;
     }
 
-	// 이벤트 통지 함수 삭제.
+    // 이벤트 통지 함수 삭제.
     public void UnregisterEventHandler(EventHandler handler)
     {
         m_handler -= handler;
     }
 
-	// 스레드 시작 함수.
-	bool LaunchThread()
-	{
-		try {
-			// Dispatch용 스레드 시작.
-			m_threadLoop = true;
-			m_thread = new Thread(new ThreadStart(Dispatch));
-			m_thread.Start();
-		}
-		catch {
+    // 스레드 시작 함수.
+    bool LaunchThread()
+    {
+        try
+        {
+            // Dispatch용 스레드 시작.
+            m_threadLoop = true;
+            m_thread = new Thread(new ThreadStart(Dispatch));
+            m_thread.Start();
+        }
+        catch
+        {
             Console.WriteLine("Cannot launch thread.");
-			return false;
-		}
-		
-		return true;
-	}
+            return false;
+        }
 
-	// 스레드 측 송수신 처리.
+        return true;
+    }
+
+    // 스레드 측 송수신 처리.
     public void Dispatch()
-	{
+    {
         Console.WriteLine("Dispatch thread started.");
 
-		while (m_threadLoop) {
-			// 클라이언트로부터의 접속을 기다립니다.
-			AcceptClient();
+        while (m_threadLoop)
+        {
+            // 클라이언트로부터의 접속을 기다립니다.
+            AcceptClient();
 
-			// 클라이언트와의 송수신 처리를 합니다.
-			if (m_socket != null && m_isConnected == true) {
+            // 클라이언트와의 송수신 처리를 합니다.
+            if (m_socket != null && m_isConnected == true)
+            {
 
-	            // 송신처리.
-	            DispatchSend();
+                // 송신처리.
+                DispatchSend();
 
-	            // 수신처리.
-	            DispatchReceive();
-	        }
+                // 수신처리.
+                DispatchReceive();
+            }
 
-			Thread.Sleep(5);
-		}
+            Thread.Sleep(5);
+        }
 
         Console.WriteLine("Dispatch thread ended.");
     }
 
-	// 클라리언트 접속.
-	void AcceptClient()
-	{
-		if (m_listener != null && m_listener.Poll(0, SelectMode.SelectRead)) {
-			// 클라이언트가 접속했습니다.
-			m_socket = m_listener.Accept();
-			m_isConnected = true;
-			NetEventState state = new NetEventState();
-			state.type = NetEventType.Connect;
-			state.result = NetEventResult.Success;
-			m_handler(state);
+    // 클라리언트 접속.
+    void AcceptClient()
+    {
+        if (m_listener != null && m_listener.Poll(0, SelectMode.SelectRead))
+        {
+            // 클라이언트가 접속했습니다.
+            m_socket = m_listener.Accept();
+            m_isConnected = true;
+            NetEventState state = new NetEventState();
+            state.type = NetEventType.Connect;
+            state.result = NetEventResult.Success;
+            m_handler(state);
             Console.WriteLine("Connected from client.");
-		}
-	}
+        }
+    }
 
-	// 스레트 측 송신처리.
+    // 스레트 측 송신처리.
     void DispatchSend()
-	{
-        try {
+    {
+        try
+        {
             // 송신처리.
-            if (m_socket.Poll(0, SelectMode.SelectWrite)) {
-				byte[] buffer = new byte[s_mtu];
+            if (m_socket.Poll(0, SelectMode.SelectWrite))
+            {
+                byte[] buffer = new byte[s_mtu];
 
                 int sendSize = m_sendQueue.Dequeue(ref buffer, buffer.Length);
-                while (sendSize > 0) {
+                while (sendSize > 0)
+                {
                     m_socket.Send(buffer, sendSize, SocketFlags.None);
                     sendSize = m_sendQueue.Dequeue(ref buffer, buffer.Length);
                 }
             }
         }
-        catch {
+        catch
+        {
             return;
         }
     }
 
-	// 스레드 측 수신처리.
+    // 스레드 측 수신처리.
     void DispatchReceive()
-	{
+    {
         // 수신처리.
-        try {
-            while (m_socket.Poll(0, SelectMode.SelectRead)) {
-				byte[] buffer = new byte[s_mtu];
+        try
+        {
+            while (m_socket.Poll(0, SelectMode.SelectRead))
+            {
+                byte[] buffer = new byte[s_mtu];
 
                 int recvSize = m_socket.Receive(buffer, buffer.Length, SocketFlags.None);
-                if (recvSize == 0) {
+                if (recvSize == 0)
+                {
                     // 끊기.
                     Console.WriteLine("Disconnect recv from client.");
                     Disconnect();
                 }
-                else if (recvSize > 0) {
+                else if (recvSize > 0)
+                {
                     m_recvQueue.Enqueue(buffer, recvSize);
                 }
             }
         }
-        catch {
+        catch
+        {
             return;
         }
     }
 
-	// 서버인지 확인.
-	public bool IsServer() {
-		return m_isServer;
-	}
-	
+    // 서버인지 확인.
+    public bool IsServer()
+    {
+        return m_isServer;
+    }
+
     // 접속 확인.
-    public bool IsConnected() {
+    public bool IsConnected()
+    {
         return m_isConnected;
     }
 

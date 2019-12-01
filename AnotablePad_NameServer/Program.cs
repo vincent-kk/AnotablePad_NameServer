@@ -1,239 +1,214 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipes;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Net.Sockets;
-using System.Net;
-using System.Diagnostics;
-using System.Collections.Generic;
 
-public class LobbyServer
+namespace AnotablePad_NameServer
 {
-    public static void OnEventHandling(NetEventState state)
+    public class LobbyServer
     {
+        public static void OnEventHandling(NetEventState state)
+        {
 
+        }
+
+        public static void Main()
+        {
+            List<RoomServerElement> rooms = AppData.Rooms;
+            List<ClientElement> clients = AppData.Clients;
+
+            TcpListener tcpListener = null;
+            ThreadObserver observer = new ThreadObserver(rooms, clients);
+            Thread observerThread = new Thread(new ThreadStart(observer.runObserving));
+            observerThread.Start();
+
+            try
+            {
+                tcpListener = new TcpListener(IPAddress.Any, 4444);
+
+                tcpListener.Start();
+
+                Console.WriteLine("MuliThread Starting : Waiting for connections...");
+
+                while (true)
+                {
+                    Socket temp = tcpListener.AcceptSocket();
+                    ClientHandler clientHandler = new ClientHandler(temp);
+                    Thread clientThread = new Thread(new ThreadStart(clientHandler.RunClientHandler));
+                    clients.Add(new ClientElement(clientHandler, clientThread));
+                    clientThread.Start();
+                }
+            }
+            catch (Exception exp)
+            {
+                Console.WriteLine("Exception :" + exp);
+            }
+            finally
+            {
+                tcpListener.Stop();
+                observerThread.Join();
+            }
+
+            Console.WriteLine("AnotablePad NameServer is Closed...");
+        }
     }
 
-    public static void Main()
+    public class ClientHandler
     {
-        List<RoomServerElement> rooms = new List<RoomServerElement>();
-        List<ClientElement> clients = new List<ClientElement>();
-
-        TcpListener tcpListener = null;
-        byte[] buffer = new byte[128];
-
-        Socket host = null;
-        Socket tablet = null;
-
-        ThreadObserver observer = new ThreadObserver(rooms, clients);
-        Thread observerThread = new Thread(new ThreadStart(observer.runObserving));
-        observerThread.Start();
-
-        try
+        Socket sock;
+        bool isTablet;
+        byte[] recvBuffer;
+        byte[] sendBuffer;
+        public ClientHandler(Socket sock)
         {
-            tcpListener = new TcpListener(IPAddress.Any, 4444);
+            this.Sock = sock;
+            this.recvBuffer = new byte[1024];
+        }
+        public Socket Sock { get => sock; set => sock = value; }
+        public bool IsTablet { get => isTablet; set => isTablet = value; }
 
-            tcpListener.Start();
-
-            Console.WriteLine("MuliThread Starting : Waiting for connections...");
-
-            while (true)
+        public void RunClientHandler()
+        {
+            try
             {
-                Socket temp = tcpListener.AcceptSocket();
-
-                
-                ClientHandler clientHandler = new ClientHandler(temp);
-                Thread clientThread = new Thread(new ThreadStart(clientHandler.clientHandler));
-                clients.Add(new ClientElement(clientHandler, clientThread));
-                clientThread.Start();
-                
-                /*
-                int recvSize = temp.Receive(buffer, buffer.Length, SocketFlags.None);
+                int recvSize = Sock.Receive(recvBuffer, recvBuffer.Length, SocketFlags.None);
                 if (recvSize > 0)
                 {
-                    string message = Encoding.UTF8.GetString(buffer, 0, recvSize);
-                    string[] toks = message.Split("|");
-                    foreach (var tok in toks)
+                    string message = Encoding.UTF8.GetString(recvBuffer, 0, recvSize);
+                    if (message == (AppData.ServerCommand + "Tablet" + AppData.Delimiter)) IsTablet = true;
+                    else IsTablet = false;
+                }
+
+                sendBuffer = Encoding.UTF8.GetBytes(AppData.ServerCommand + "CONNECTION");
+                Sock.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
+                while (true)
+                {
+                    recvSize = Sock.Receive(recvBuffer, recvBuffer.Length, SocketFlags.None);
+                    if (recvSize > 0)
                     {
-                        if (tok == "") continue;
-                        if (tok.Contains("@"))
-                        {
-                            if (tok == "@Host-PC")
-                            {
-                                host = temp;
-                                Console.WriteLine("Host PC Connection");
-                            }
-                            else if (tok == "@Tablet")
-                            {
-                                tablet = temp;
-                                Console.WriteLine("Tablet Connection");
-                            }
-                        }
+                        string message = Encoding.UTF8.GetString(recvBuffer, 0, recvSize);
+                        string returnMessage = ReturnRequest(message);
+                        if (returnMessage == "") continue;
+                        sendBuffer = Encoding.UTF8.GetBytes(returnMessage);
+                        Sock.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
+                    }
+                    else
+                    {
+                        sendBuffer = Encoding.UTF8.GetBytes(AppData.ServerCommand + "ERROR");
+                        Sock.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
+                        break;
                     }
                 }
-                else
-                {
-                    buffer = Encoding.UTF8.GetBytes("@FAIL");
-                    temp.Send(buffer, buffer.Length, SocketFlags.None);
-                    continue;
-                }
-
-                if (host == null || tablet == null)
-                    continue;
-
-                ProcessHandeler roomProcess = new ProcessHandeler(host, tablet);
-                Thread roomHandler = new Thread(new ThreadStart(roomProcess.runProcess));
-                rooms.Add(new RoomServerElement(roomProcess, roomHandler));
-                roomHandler.Start();
-                host = tablet = null;
-                */
-                
             }
-        }
-        catch (Exception exp)
-        {
-            Console.WriteLine("Exception :" + exp);
-        }
-        finally
-        {
-            tcpListener.Stop();
-            observerThread.Join();
-        }
-
-        Console.WriteLine("AnotablePad NameServer is Closed...");
-    }
-
-    private static void ServerThread(object data)
-    {
-        NamedPipeServerStream pipeServer = new NamedPipeServerStream("testpipe", PipeDirection.InOut);
-
-        int threadId = Thread.CurrentThread.ManagedThreadId;
-
-        // Wait for a client to connect
-        pipeServer.WaitForConnection();
-
-        Console.WriteLine("Client connected on thread[{0}].", threadId);
-        try
-        {
-            // Read the request from the client. Once the client has
-            // written to the pipe its security token will be available.
-
-            StreamString ss = new StreamString(pipeServer);
-
-            // Verify our identity to the connected client using a
-            // string that the client anticipates.
-
-            ss.WriteString("I am the one true server!");
-            string filename = ss.ReadString();
-
-            // Read in the contents of the file while impersonating the client.
-            ReadFileToStream fileReader = new ReadFileToStream(ss, filename);
-
-            // Display the name of the user we are impersonating.
-            Console.WriteLine("Reading file: {0} on thread[{1}] as user: {2}.", filename, threadId, pipeServer.GetImpersonationUserName());
-            pipeServer.RunAsClient(fileReader.Start);
-        }
-        // Catch the IOException that is raised if the pipe is broken
-        // or disconnected.
-        catch (IOException e)
-        {
-            Console.WriteLine("ERROR: {0}", e.Message);
-        }
-        pipeServer.Close();
-    }
-}
-
-
-public class ClientHandler
-{
-    Socket sock;
-    bool isTablet;
-    byte[] buffer;
-    public ClientHandler(Socket sock)
-    {
-        this.Sock = sock;
-        this.buffer = new byte[1024];
-    }
-    public Socket Sock { get => sock; set => sock = value; }
-    public bool IsTablet { get => isTablet; set => isTablet = value; }
-
-    public void clientHandler()
-    {
-        try
-        {
-            int recvSize = Sock.Receive(buffer, buffer.Length, SocketFlags.None);
-            if (recvSize > 0)
+            catch(SocketException)
             {
-                string message = Encoding.UTF8.GetString(buffer, 0, recvSize);
-                if (message == "@Tablet|") IsTablet = true;
-                else IsTablet = false;
+                Console.WriteLine("Socket Disconnect");
             }
-
-            buffer = Encoding.UTF8.GetBytes("@CONNECTION");
-            Sock.Send(buffer, buffer.Length, SocketFlags.None);
-            while (true)
+            catch (IOException e)
             {
-                recvSize = Sock.Receive(buffer, buffer.Length, SocketFlags.None);
-                if (recvSize > 0)
-                {
-                    string message = Encoding.UTF8.GetString(buffer, 0, recvSize);
-                    string returnMessage = IsTablet ? TabletRequest(message) : ComputerRequest(message);
-                    buffer = Encoding.UTF8.GetBytes(returnMessage);
-                    Sock.Send(buffer, buffer.Length, SocketFlags.None);
-                }
-                else
-                {
-                    buffer = Encoding.UTF8.GetBytes("@ERROR");
-                    Sock.Send(buffer, buffer.Length, SocketFlags.None);
-                    break;
-                }
+                Console.WriteLine("ERROR: {0}", e.Message);
             }
         }
-        catch (IOException e)
+
+        private string ReturnRequest(string request)
         {
-            Console.WriteLine("ERROR: {0}", e.Message);
+            string msg = "";
+
+            if (request == CommendBook.FIND_ROOM)
+            {
+                msg = MakeRoomList(IsTablet);
+            }
+            else if (request.Contains(CommendBook.CREATE_ROOM))
+            {
+                msg = CreateRoomElement(request);
+            }
+            else if (request.Contains(CommendBook.ENTER_ROOM))
+            {
+                msg = EnterRoom(request);
+            }
+            else
+            {
+                msg = CommendBook.ERROR_MESSAGE+"COMMAND";
+            }
+            return msg;
         }
-    }
-    private string TabletRequest(string request)
-    {
-        string msg;
-        switch (request)
+
+        private string MakeRoomList(bool tablet)
         {
-            case "@FIND-ROOM|":
-                msg = "@ROOM-LIST%AAA%BBB%CCC";
-                break;
-            case "@CREATE-ROOM|":
-                msg = "@ROOMNAME";
-                break;
-            case "@ENTER-ROOM|":
-                msg = "@ROOMNUMBER";
-                break;
-            default:
-                msg = "@INVALIED";
-                break;
+            string roomlist = CommendBook.HEADER_ROOMLIST;
+            if (tablet)
+            {
+                foreach (var room in AppData.Rooms)
+                {
+                    if (room.IsReady && !room.IsRunnig)
+                    {
+                        roomlist += AppData.DelimiterUI + room.Name;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var room in AppData.Rooms)
+                {
+                    if (room.IsRunnig)
+                    {
+                        roomlist += AppData.DelimiterUI + room.Name;
+                    }
+                }
+            }
+            return roomlist;
         }
-        return msg;
-    }
-    private string ComputerRequest(string request)
-    {
-        string msg;
-        switch (request)
+
+        private string CreateRoomElement(string request)
         {
-            case "@FIND-ROOM|":
-                msg = "@ROOM-LIST%AWEAD%GWEGSDf%QASDWEG%AWAWDA%QWEASD";
-                break;
-            case "@CREATE-ROOM|":
-                msg = "@ROOMNAME";
-                break;
-            case "@ENTER-ROOM|":
-                msg = "@ROOMNUMBER";
-                break;
-            default:
-                msg = "@INVALIED";
-                break;
+            if (IsTablet) return CommendBook.ERROR_MESSAGE+"INVALID";
+
+            var data = request.Split(AppData.DelimiterUI);
+
+            foreach(var room in AppData.Rooms)
+                if (room.Name == data[1]) return CommendBook.ERROR_MESSAGE+"NAME";
+
+            var newRoom = new RoomServerElement(data[1], data[2]);
+            newRoom.Host = this.Sock;
+            AppData.Rooms.Add(newRoom);
+            return CommendBook.CREATE_ROOM + AppData.DelimiterUI + newRoom.Name;
         }
-        return msg;
+
+        private string EnterRoom(string request)
+        {
+            if (IsTablet)
+            {
+                var data = request.Split(AppData.DelimiterUI);
+                foreach (var room in AppData.Rooms)
+                {
+                    if (room.Name == data[1])
+                    {
+                        if(room.Password == data[2])
+                        {
+                            sendBuffer = Encoding.UTF8.GetBytes(CommendBook.START_DRAWING);
+                            Sock.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
+                            room.Host.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
+
+                            ProcessHandeler roomProcess = new ProcessHandeler(room.Host, this.Sock);
+                            Thread roomHandler = new Thread(new ThreadStart(roomProcess.RunProcess));
+                            AppData.Rooms.Add(new RoomServerElement(roomProcess, roomHandler));
+                            roomHandler.Start();
+                            return "";
+                        }
+                        return CommendBook.ERROR_MESSAGE + "WRONGPW";
+                    }
+                }
+                return CommendBook.ERROR_MESSAGE + "NOROOM";
+            }
+            else
+            {
+                return "";
+            }
+        }
     }
 }

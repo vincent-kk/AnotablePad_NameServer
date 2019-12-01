@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 class SocketManager
 {
@@ -18,8 +16,6 @@ class SocketManager
     private Thread workerThread = null;
 
     private bool isConnected = false;
-
-    private bool isTablet = false;
 
     private static int BUFFERSIZE = 1024;
 
