@@ -10,7 +10,6 @@ namespace AnotablePad_NameServer
         private static readonly char delimiterUI = '%';
         private static readonly char clientCommand = '#';
         private static readonly char serverCommand = '@';
-
         public static List<RoomServerElement> Rooms { get => rooms; set => rooms = value; }
         public static List<ClientElement> Clients { get => clients; set => clients = value; }
         public static char Delimiter => delimiter;
@@ -25,21 +24,15 @@ namespace AnotablePad_NameServer
         private static readonly string createRoom = AppData.ServerCommand + "CREATE-ROOM";
         private static readonly string enterRoom = AppData.ServerCommand + "ENTER-ROOM";
         private static readonly string startDrawing = AppData.ServerCommand + "START-DRAWING";
-
+        private static readonly string guestDrawing = AppData.ServerCommand + "GUEST-DRAWING";
         private static readonly string errorMessage = AppData.ServerCommand + "ERROR" + AppData.DelimiterUI;
         private static readonly string roomListHeader = AppData.ServerCommand + "ROOM-LIST";
-
-
         public static string FIND_ROOM => findRoom;
         public static string CREATE_ROOM => createRoom;
         public static string ENTER_ROOM => enterRoom;
         public static string HEADER_ROOMLIST => roomListHeader;
         public static string ERROR_MESSAGE => errorMessage;
         public static string START_DRAWING => startDrawing;
-
-        //        private static readonly string FINDROOM = AppData.ServerCommand + "FIND-ROOM" + AppData.Delimiter;
-        //        private static readonly string FINDROOM = AppData.ServerCommand + "FIND-ROOM" + AppData.Delimiter;
-
-
+        public static string GUEST_DRAWING => guestDrawing;
     }
 }

@@ -13,7 +13,7 @@ namespace AnotablePad_NameServer
         private string lobbyServerProcessPath = "C:\\Users\\Lunox\\Source\\repos\\ProcessTester\\ProcessTester\\bin\\Release\\netcoreapp3.0\\AnotablePad_RoomServer.exe";
         private string pipeName;
         private string roomServerPort;
-
+        private string name;
         private Socket host;
         private Socket tablet;
 
@@ -27,11 +27,11 @@ namespace AnotablePad_NameServer
             this.host = host;
         }
 
-        public ProcessHandeler(Socket host, Socket tablet)
+        public ProcessHandeler(Socket host, Socket tablet, string name)
         {
             this.host = host;
             this.tablet = tablet;
-
+            this.name = name;
             pipeName = Utilities.GetRandomPassword(8);
             RoomServerPort = Utilities.FindFreePort().ToString();
         }
@@ -45,7 +45,7 @@ namespace AnotablePad_NameServer
             Process roomServer = new Process();
             roomServer.StartInfo.UseShellExecute = false;
             roomServer.StartInfo.FileName = lobbyServerProcessPath;
-            roomServer.StartInfo.Arguments = pipeName;
+            roomServer.StartInfo.Arguments = name + " " + pipeName;
             roomServer.StartInfo.CreateNoWindow = false;
             roomServer.Start();
 
@@ -72,8 +72,8 @@ namespace AnotablePad_NameServer
                 host.Send(buffer, buffer.Length, SocketFlags.None);
                 tablet.Send(buffer, buffer.Length, SocketFlags.None);
 
-                //var temp = ss.ReadString();
-                //Console.WriteLine(temp);
+                var msg = ss.ReadString();
+                Console.WriteLine(msg);
             }
             catch (IOException e)
             {

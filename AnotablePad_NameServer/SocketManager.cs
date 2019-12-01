@@ -24,6 +24,7 @@ class SocketManager
 
     private EventHandler handler;
 
+    public bool IsConnected { get => isConnected;}
 
     public SocketManager()
     {
@@ -33,8 +34,7 @@ class SocketManager
 
     public bool StartSocket(Socket socket)
     {
-        Console.WriteLine("ClientSocket Connected");
-
+        Console.WriteLine("Socket Connected");
         try
         {
             this.socket = socket;
@@ -164,18 +164,9 @@ class SocketManager
             while (socket.Poll(0, SelectMode.SelectRead))
             {
                 byte[] buffer = new byte[BUFFERSIZE];
-
                 int recvSize = socket.Receive(buffer, buffer.Length, SocketFlags.None);
-                if (recvSize == 0)
-                {
-                    // 끊기.
-                    Console.WriteLine("Disconnect recv from client.");
-                    Disconnect();
-                }
-                else if (recvSize > 0)
-                {
-                    receiveQueue.Enqueue(buffer, recvSize);
-                }
+                if (recvSize == 0) Disconnect();
+                else if (recvSize > 0) receiveQueue.Enqueue(buffer, recvSize);
             }
         }
         catch
@@ -193,12 +184,6 @@ class SocketManager
     public void UnregisterEventHandler(EventHandler handler)
     {
         this.handler -= handler;
-    }
-
-    // 접속 확인.
-    public bool IsConnected()
-    {
-        return isConnected;
     }
 
 

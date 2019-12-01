@@ -122,10 +122,14 @@ namespace AnotablePad_NameServer
                     {
                         if (Rooms[i].Thread.Join(timeSlice))
                         {
-                            Console.WriteLine("Room Thread Joined");
                             Rooms.RemoveAt(i);
                             if (Rooms.Count == 0) break;
                         }
+                    }
+                    if (!Rooms[i].Host.Connected)
+                    {
+                        Rooms.RemoveAt(i);
+                        if (Rooms.Count == 0) break;
                     }
                 }
             }
@@ -144,7 +148,6 @@ namespace AnotablePad_NameServer
                 {
                     if (Clients[i].Thread.Join(timeSlice))
                     {
-                        Console.WriteLine("Client Thread Joined");
                         Clients.RemoveAt(i);
                         if (Clients.Count == 0) break;
                     }
