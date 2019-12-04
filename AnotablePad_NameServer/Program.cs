@@ -9,11 +9,6 @@ namespace AnotablePad_NameServer
 {
     public class LobbyServer
     {
-        public static void OnEventHandling(NetEventState state)
-        {
-
-        }
-
         public static void Main()
         {
             List<RoomServerElement> rooms = AppData.Rooms;
@@ -23,6 +18,11 @@ namespace AnotablePad_NameServer
             ThreadObserver observer = new ThreadObserver(rooms, clients);
             Thread observerThread = new Thread(new ThreadStart(observer.runObserving));
             observerThread.Start();
+
+            rooms.Add(new RoomServerElement("Dummy1","123|"));
+            rooms.Add(new RoomServerElement("Dummy2", "123|"));
+            rooms.Add(new RoomServerElement("Dummy3", "123|"));
+            rooms.Add(new RoomServerElement("Dummy4", "123|"));
 
             try
             {

@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
+/*
 public class TransportTCP
 {
 
@@ -342,6 +343,7 @@ public class TransportTCP
 
 }
 
+
 public class TcpListenerManager
 {
     private bool isListening;
@@ -353,4 +355,4 @@ public class TcpListenerManager
         TcpListener = new TcpListener(IPAddress.Any, Int32.Parse(port));
         IsListening = true;
     }
-}
+}*/

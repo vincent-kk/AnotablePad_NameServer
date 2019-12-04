@@ -103,7 +103,7 @@ namespace AnotablePad_NameServer
         }
         public void runObserving()
         {
-            Console.WriteLine("Start Observing");
+            Console.WriteLine("Garbage Collector Strating...");
             while (true)
             {
                 CleanRoom();
@@ -126,11 +126,13 @@ namespace AnotablePad_NameServer
                             if (Rooms.Count == 0) break;
                         }
                     }
+                    /*
                     if (!Rooms[i].Host.Connected)
                     {
                         Rooms.RemoveAt(i);
                         if (Rooms.Count == 0) break;
                     }
+                    */
                 }
             }
             else
@@ -160,44 +162,3 @@ namespace AnotablePad_NameServer
         }
     }
 }
-
-/*
-int recvSize = temp.Receive(buffer, buffer.Length, SocketFlags.None);
-if (recvSize > 0)
-{
-    string message = Encoding.UTF8.GetString(buffer, 0, recvSize);
-    string[] toks = message.Split("|");
-    foreach (var tok in toks)
-    {
-        if (tok == "") continue;
-        if (tok.Contains("@"))
-        {
-            if (tok == "@Host-PC")
-            {
-                host = temp;
-                Console.WriteLine("Host PC Connection");
-            }
-            else if (tok == "@Tablet")
-            {
-                tablet = temp;
-                Console.WriteLine("Tablet Connection");
-            }
-        }
-    }
-}
-else
-{
-    buffer = Encoding.UTF8.GetBytes("@FAIL");
-    temp.Send(buffer, buffer.Length, SocketFlags.None);
-    continue;
-}
-
-if (host == null || tablet == null)
-    continue;
-
-ProcessHandeler roomProcess = new ProcessHandeler(host, tablet);
-Thread roomHandler = new Thread(new ThreadStart(roomProcess.runProcess));
-rooms.Add(new RoomServerElement(roomProcess, roomHandler));
-roomHandler.Start();
-host = tablet = null;
-*/

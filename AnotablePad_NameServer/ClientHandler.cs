@@ -28,8 +28,16 @@ namespace AnotablePad_NameServer
                 if (recvSize > 0)
                 {
                     string message = Encoding.UTF8.GetString(recvBuffer, 0, recvSize);
-                    if (message == (AppData.ServerCommand + "Tablet" + AppData.Delimiter)) IsTablet = true;
-                    else IsTablet = false;
+                    if (message == (AppData.ServerCommand + "Tablet" + AppData.Delimiter))
+                    {
+                        Console.WriteLine("Tablet is Connected");
+                        IsTablet = true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("PC is Connected");
+                        IsTablet = false;
+                    }
                 }
 
                 sendBuffer = Encoding.UTF8.GetBytes(AppData.ServerCommand + "CONNECTION");
