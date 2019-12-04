@@ -10,7 +10,7 @@ namespace AnotablePad_NameServer
 {
     public class ProcessHandeler
     {
-        private string lobbyServerProcessPath = "C:\\Users\\Lunox\\Source\\repos\\ProcessTester\\ProcessTester\\bin\\Release\\netcoreapp3.0\\AnotablePad_RoomServer.exe";
+        private string lobbyServerProcessPath = "C:\\Users\\Lunox\\Source\\repos\\AnotablePad_RoomServer\\AnotablePad_RoomServer\\bin\\Release\\netcoreapp3.0\\AnotablePad_RoomServer.exe";
         private string pipeName;
         private string roomServerPort;
         private string name;

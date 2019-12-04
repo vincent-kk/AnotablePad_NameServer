@@ -27,6 +27,7 @@ namespace AnotablePad_NameServer
         private static readonly string guestDrawing = AppData.ServerCommand + "GUEST-DRAWING";
         private static readonly string errorMessage = AppData.ServerCommand + "ERROR" + AppData.DelimiterUI;
         private static readonly string roomListHeader = AppData.ServerCommand + "ROOM-LIST";
+        private static readonly string connection = AppData.ServerCommand + "CONNECTION";
         public static string FIND_ROOM => findRoom;
         public static string CREATE_ROOM => createRoom;
         public static string ENTER_ROOM => enterRoom;
@@ -34,5 +35,6 @@ namespace AnotablePad_NameServer
         public static string ERROR_MESSAGE => errorMessage;
         public static string START_DRAWING => startDrawing;
         public static string GUEST_DRAWING => guestDrawing;
+        public static string Connection => connection;
     }
 }

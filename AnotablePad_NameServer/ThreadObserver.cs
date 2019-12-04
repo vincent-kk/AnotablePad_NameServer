@@ -126,13 +126,13 @@ namespace AnotablePad_NameServer
                             if (Rooms.Count == 0) break;
                         }
                     }
-                    /*
+                    
                     if (!Rooms[i].Host.Connected)
                     {
                         Rooms.RemoveAt(i);
                         if (Rooms.Count == 0) break;
                     }
-                    */
+                    
                 }
             }
             else

@@ -19,11 +19,6 @@ namespace AnotablePad_NameServer
             Thread observerThread = new Thread(new ThreadStart(observer.runObserving));
             observerThread.Start();
 
-            rooms.Add(new RoomServerElement("Dummy1","123|"));
-            rooms.Add(new RoomServerElement("Dummy2", "123|"));
-            rooms.Add(new RoomServerElement("Dummy3", "123|"));
-            rooms.Add(new RoomServerElement("Dummy4", "123|"));
-
             try
             {
                 tcpListener = new TcpListener(IPAddress.Any, 4444);

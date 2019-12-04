@@ -40,7 +40,7 @@ namespace AnotablePad_NameServer
                     }
                 }
 
-                sendBuffer = Encoding.UTF8.GetBytes(AppData.ServerCommand + "CONNECTION");
+                sendBuffer = Encoding.UTF8.GetBytes(CommendBook.Connection);
                 Sock.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
                 while (true)
                 {
@@ -55,7 +55,7 @@ namespace AnotablePad_NameServer
                     }
                     else
                     {
-                        sendBuffer = Encoding.UTF8.GetBytes(AppData.ServerCommand + "ERROR");
+                        sendBuffer = Encoding.UTF8.GetBytes(CommendBook.ERROR_MESSAGE);
                         Sock.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
                         break;
                     }
@@ -118,7 +118,7 @@ namespace AnotablePad_NameServer
 
         private string CreateRoomElement(string request)
         {
-            if (IsTablet) return CommendBook.ERROR_MESSAGE + "INVALID";
+            if (IsTablet) return CommendBook.ERROR_MESSAGE;
 
             var data = request.Split(AppData.DelimiterUI);
 
