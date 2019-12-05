@@ -122,6 +122,7 @@ namespace AnotablePad_NameServer
                     {
                         if (Rooms[i].Thread.Join(timeSlice))
                         {
+                            Console.WriteLine(Rooms[i].Name + " Clean Up");
                             Rooms.RemoveAt(i);
                             if (Rooms.Count == 0) break;
                         }

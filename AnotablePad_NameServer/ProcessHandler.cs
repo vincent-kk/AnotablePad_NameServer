@@ -61,7 +61,7 @@ namespace AnotablePad_NameServer
             {
                 StreamString ss = new StreamString(pipeServer);
 
-                ss.WriteString(AppData.ServerCommand + "NameServer:StartRoom"); //<<1
+                ss.WriteString("NameServer::StartRoom"); //<<1
 
                 //룸서버에 포트 전송
                 ss.WriteString(RoomServerPort); //<<3
@@ -69,11 +69,9 @@ namespace AnotablePad_NameServer
                 //클라이언트에게 룸서버 포트 전송.
                 buffer = Encoding.UTF8.GetBytes(RoomServerPort);
 
+                Console.WriteLine("New Port {0}", RoomServerPort);
                 host.Send(buffer, buffer.Length, SocketFlags.None);
                 tablet.Send(buffer, buffer.Length, SocketFlags.None);
-
-                var msg = ss.ReadString();
-                Console.WriteLine(msg);
             }
             catch (IOException e)
             {
