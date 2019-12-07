@@ -10,22 +10,12 @@ namespace AnotablePad_NameServer
 {
     public class ProcessHandeler
     {
-        private string lobbyServerProcessPath = "C:\\Users\\Lunox\\Source\\repos\\AnotablePad_RoomServer\\AnotablePad_RoomServer\\bin\\Release\\netcoreapp3.0\\AnotablePad_RoomServer.exe";
+        private string RoomServerProcessPath = Environment.CurrentDirectory + "\\RoomServer\\AnotablePad_RoomServer.exe";
         private string pipeName;
         private string roomServerPort;
         private string name;
         private Socket host;
         private Socket tablet;
-
-        public ProcessHandeler()
-        {
-            Console.WriteLine("Room Handling Thread is Running");
-        }
-
-        public ProcessHandeler(Socket host)
-        {
-            this.host = host;
-        }
 
         public ProcessHandeler(Socket host, Socket tablet, string name)
         {
@@ -44,7 +34,7 @@ namespace AnotablePad_NameServer
             Console.WriteLine("Room Server Process Executing...");
             Process roomServer = new Process();
             roomServer.StartInfo.UseShellExecute = false;
-            roomServer.StartInfo.FileName = lobbyServerProcessPath;
+            roomServer.StartInfo.FileName = RoomServerProcessPath;
             roomServer.StartInfo.Arguments = name + " " + pipeName;
             roomServer.StartInfo.CreateNoWindow = false;
             roomServer.Start();
@@ -56,7 +46,7 @@ namespace AnotablePad_NameServer
             // Wait for a client to connect
             Console.WriteLine("Waiting for Room Server connection...");
             pipeServer.WaitForConnection();
-            Console.WriteLine("Room Server {0} connected.", threadId);
+            Console.WriteLine("Room Server {0} connected.", name);
             try
             {
                 StreamString ss = new StreamString(pipeServer);
@@ -69,7 +59,6 @@ namespace AnotablePad_NameServer
                 //클라이언트에게 룸서버 포트 전송.
                 buffer = Encoding.UTF8.GetBytes(RoomServerPort);
 
-                Console.WriteLine("New Port {0}", RoomServerPort);
                 host.Send(buffer, buffer.Length, SocketFlags.None);
                 tablet.Send(buffer, buffer.Length, SocketFlags.None);
             }
@@ -77,12 +66,8 @@ namespace AnotablePad_NameServer
             {
                 Console.WriteLine("ERROR: {0}", e.Message);
             }
-
             roomServer.WaitForExit();
-
             pipeServer.Close();
-
-            Console.WriteLine("Room Server Closed Dictected");
         }
     }
 }

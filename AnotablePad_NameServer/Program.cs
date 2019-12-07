@@ -25,7 +25,7 @@ namespace AnotablePad_NameServer
 
                 tcpListener.Start();
 
-                Console.WriteLine("MuliThread Starting : Waiting for connections...");
+                Console.WriteLine("AnotablePad Server is Ready : Waiting for connections...");
 
                 while (true)
                 {
@@ -46,7 +46,7 @@ namespace AnotablePad_NameServer
                 observerThread.Join();
             }
 
-            Console.WriteLine("AnotablePad NameServer is Closed...");
+            Console.WriteLine("AnotablePad Server is Closed...");
         }
     }
 }

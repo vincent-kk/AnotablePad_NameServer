@@ -20,7 +20,6 @@ class SocketManager
 
     private static int BUFFERSIZE = 1024;
 
-    // 델리게이트 쓰는법을 알아보자
     public delegate void EventHandler(NetEventState state);
 
     private EventHandler handler;
@@ -50,7 +49,6 @@ class SocketManager
         return LaunchdispatchThread();
     }
 
-    // 송신처리.
     public int Send(byte[] data, int size)
     {
         if (sendQueue == null)
@@ -60,7 +58,6 @@ class SocketManager
         return sendQueue.Enqueue(data, size);
     }
 
-    // 수신처리.
     public int Receive(ref byte[] buffer, int size)
     {
         if (receiveQueue == null)
@@ -78,13 +75,11 @@ class SocketManager
 
         if (socket != null)
         {
-            // 소켓 클로즈.
             socket.Shutdown(SocketShutdown.Both);
             socket.Close();
             socket = null;
         }
 
-        // 끊김을 통지합니다.
         if (handler != null)
         {
             NetEventState state = new NetEventState();
@@ -99,7 +94,6 @@ class SocketManager
     {
         try
         {
-            // Dispatch용 스레드 시작.
             dispatchThreadLoop = true;
             dispatchThread = new Thread(new ThreadStart(Dispatch));
             dispatchThread.Start();
@@ -113,14 +107,12 @@ class SocketManager
     }
 
 
-    // 스레드 측 송수신 처리.
     public void Dispatch()
     {
         Console.WriteLine("Dispatch dispatchThread started.");
 
         while (dispatchThreadLoop)
         {
-            // 클라이언트와의 송수신 처리를 합니다.
             if (socket != null && isConnected == true)
             {
                 DispatchReceive();
@@ -132,12 +124,10 @@ class SocketManager
     }
 
 
-    // 스레트 측 송신처리.
     void DispatchSend()
     {
         try
         {
-            // 송신처리.
             if (socket.Poll(0, SelectMode.SelectWrite))
             {
                 byte[] buffer = new byte[BUFFERSIZE];
@@ -156,10 +146,8 @@ class SocketManager
         }
     }
 
-    // 스레드 측 수신처리.
     void DispatchReceive()
     {
-        // 수신처리.
         try
         {
             while (socket.Poll(0, SelectMode.SelectRead))
@@ -175,13 +163,13 @@ class SocketManager
             return;
         }
     }
-    // 이벤트 통지 함수 등록.
+
     public void RegisterEventHandler(EventHandler handler)
     {
         this.handler += handler;
     }
 
-    // 이벤트 통지 함수 삭제.
+
     public void UnregisterEventHandler(EventHandler handler)
     {
         this.handler -= handler;
