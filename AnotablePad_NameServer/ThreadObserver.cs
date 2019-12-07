@@ -127,13 +127,14 @@ namespace AnotablePad_NameServer
                             if (Rooms.Count == 0) break;
                         }
                     }
-                    
-                    if (!Rooms[i].Host.Connected)
+                    else
                     {
-                        Rooms.RemoveAt(i);
-                        if (Rooms.Count == 0) break;
+                        if (!Rooms[i].Host.Connected)
+                        {
+                            Rooms.RemoveAt(i);
+                            if (Rooms.Count == 0) break;
+                        }
                     }
-                    
                 }
             }
             else
@@ -155,6 +156,7 @@ namespace AnotablePad_NameServer
                 {
                     if (Clients[i].Thread.Join(timeSlice))
                     {
+                        Clients[i].Handler.Sock.Close();
                         Clients.RemoveAt(i);
                         if (Clients.Count == 0) break;
                     }
