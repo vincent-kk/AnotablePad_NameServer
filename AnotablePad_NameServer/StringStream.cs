@@ -2,7 +2,10 @@
 using System.IO;
 using System.Text;
 
-// Defines the data protocol for reading and writing strings on our stream
+/// <summary>
+/// Named Pipe를 사용할 때 함께 사용되는 Stream String.
+/// MS DOC 수록.
+/// </summary>
 public class StreamString
 {
     private Stream ioStream;

@@ -7,8 +7,11 @@ using System.Threading;
 
 namespace AnotablePad_NameServer
 {
-    public class LobbyServer
+    public class NameServer
     {
+        /// <summary>
+        /// NameServer는 계속 Accept를 유지하면서 새로운 접속이 발생하면 바로 Thread를 만들어서 처리한다.
+        /// </summary>
         public static void Main()
         {
             List<RoomServerElement> rooms = AppData.Rooms;
@@ -43,6 +46,7 @@ namespace AnotablePad_NameServer
             finally
             {
                 tcpListener.Stop();
+                observer.Loop = false;
                 observerThread.Join();
             }
 

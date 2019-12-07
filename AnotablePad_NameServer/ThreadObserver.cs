@@ -5,6 +5,10 @@ using System.Threading;
 
 namespace AnotablePad_NameServer
 {
+    /// <summary>
+    /// Room Server를 구성하는 다양한 정보를 모아둔 클래스
+    /// 기본적으로 구조체와 유사하게 사용된다.
+    /// </summary>
     public class RoomServerElement
     {
         private ProcessHandeler process;
@@ -19,26 +23,11 @@ namespace AnotablePad_NameServer
         private string port;
 
 
-        public RoomServerElement(ProcessHandeler process, Thread thread)
-        {
-            this.Process = process;
-            this.Thread = thread;
-            Port = Process.RoomServerPort;
-            OpenForGuest();
-        }
         public RoomServerElement(string name, string password)
         {
             Name = name;
             Password = password;
             OpenForTablet();
-        }
-
-        public RoomServerElement(string name, string password, bool run)
-        {
-            Name = name;
-            Password = password;
-            if (run) OpenForGuest();
-            else OpenForTablet();
         }
 
         public void SetRoomServerElements(ProcessHandeler process, Thread thread)
@@ -59,7 +48,6 @@ namespace AnotablePad_NameServer
         public bool IsReady { get => isReady; set => isReady = value; }
         public bool IsRunnig { get => isRunnig; set => isRunnig = value; }
 
-
         public void OpenForTablet()
         {
             IsReady = true;
@@ -71,7 +59,9 @@ namespace AnotablePad_NameServer
             IsRunnig = true;
         }
     }
-
+    /// <summary>
+    /// Room Server와 동일. 접속한 사용자에 대한 정보를 모아두는 클래스
+    /// </summary>
     public class ClientElement
     {
         private ClientHandler handler;
@@ -84,33 +74,43 @@ namespace AnotablePad_NameServer
         public ClientHandler Handler { get => handler; set => handler = value; }
         public Thread Thread { get => thread; set => thread = value; }
     }
-
+    /// <summary>
+    /// 일종의 GC역할을 하는 Thread이다.
+    /// List를 순회하며 연결이 끊긴 Client Thread나 Room Server Thread를 정리한다.
+    /// </summary>
     class ThreadObserver
     {
+        private bool loop;
         private Thread thread;
-        private TcpListenerManager listener;
         private List<RoomServerElement> rooms;
         private List<ClientElement> clients = new List<ClientElement>();
         private readonly int timeScale = 1000;
         public Thread Thread { get => thread; set => thread = value; }
-        public TcpListenerManager Listener { get => listener; set => listener = value; }
         public List<RoomServerElement> Rooms { get => rooms; set => rooms = value; }
         public List<ClientElement> Clients { get => clients; set => clients = value; }
+        public bool Loop { get => loop; set => loop = value; }
+
         public ThreadObserver(List<RoomServerElement> rooms, List<ClientElement> clients)
         {
             Rooms = rooms;
             Clients = clients;
+            Loop = true;
         }
         public void runObserving()
         {
             Console.WriteLine("Garbage Collector Strating...");
-            while (true)
+            while (Loop)
             {
                 CleanRoom();
                 CleanClient();
             }
         }
 
+        /// <summary>
+        /// Room Thread 정리.
+        /// 일정한 Time Scale을 List의 크기로 나눠서 사용한다.
+        /// 동일한 시간마다 동작하게 하기 위한 구성
+        /// </summary>
         private void CleanRoom()
         {
             if (Rooms.Count > 0)
@@ -122,7 +122,7 @@ namespace AnotablePad_NameServer
                     {
                         if (Rooms[i].Thread.Join(timeSlice))
                         {
-                            Console.WriteLine(Rooms[i].Name + " Clean Up");
+                            Console.WriteLine("Room Name : {0} Clean Up", Rooms[i].Name);
                             Rooms.RemoveAt(i);
                             if (Rooms.Count == 0) break;
                         }
@@ -141,7 +141,11 @@ namespace AnotablePad_NameServer
                 Thread.Sleep(timeScale);
             }
         }
-
+        /// <summary>
+        /// Client Thread 정리.
+        /// 일정한 Time Scale을 List의 크기로 나눠서 사용한다.
+        /// 동일한 시간마다 동작하게 하기 위한 구성
+        /// </summary>
         private void CleanClient()
         {
             if (Clients.Count > 0)

@@ -8,6 +8,10 @@ using System.Threading;
 
 namespace AnotablePad_NameServer
 {
+    /// <summary>
+    /// Room Server Process를 생성하고 이 Process가 종료되는 것을 기다리는 Thread.
+    /// Room Server가 생성되면 추가적인 정보를 전달하고 대기상태에 빠진다.
+    /// </summary>
     public class ProcessHandeler
     {
         private string RoomServerProcessPath = Environment.CurrentDirectory + "\\RoomServer\\AnotablePad_RoomServer.exe";

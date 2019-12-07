@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
-
+/// <summary>
+/// 자주 사용하거나 공통적으로 사용되는 부분을 정리해둔 부분
+/// </summary>
 namespace AnotablePad_NameServer
 {
     public class AppData
